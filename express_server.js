@@ -1,10 +1,11 @@
-const e = require("express");
+
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
 
 const bodyParser = require("body-parser");
+const e = require("express");
 app.use(bodyParser.urlencoded({extended: true}));
 
 const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -27,6 +28,7 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -37,7 +39,11 @@ app.get("/urls.json", (req, res) => {
 
 app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  const longURL = req.body.longURL;
+  const shortURL = generateRandomString(6);
+  urlDatabase[shortURL] = `http://www.${longURL}`;
+
+  res.redirect("/urls");         // Respond with 'Ok' (we will replace this)
 });
 
 app.get("/urls", (req, res) => {
@@ -49,6 +55,11 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+app.get("/u/:shortURL", (req, res) => {
+   //const longURL = `http://www.${shortURL}`
+   const longURL = urlDatabase[req.params.shortURL]; 
+  res.redirect(longURL);
+});
 
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: req.params.longURL };
