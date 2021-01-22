@@ -1,0 +1,30 @@
+<html>
+
+  <head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <title>  </title>
+  </head>
+  <body>
+    <%- include('partials/_header') %>   
+ 
+<form method="post" action="/login" >
+  <div class="container">
+    <h1>login</h1>
+    <p>login form </p>
+    <hr>
+
+    <label for="email"><b>Email</b></label>
+    <input type="text" placeholder="Enter Email" name="email" id="email" required>
+
+    <label for="psw"><b>Password</b></label>
+    <input type="password" placeholder="Enter Password" name="psw" id="psw" required>
+    <hr>
+
+    <p><=back to my blog </p>
+    <button type="submit" class="login">login</button>
+  </div>
+
+ 
+</form>
+</body>
+</html>

@@ -25,51 +25,114 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
 
-let users={"fatemeh" : "amir"};
-//login
+             //login 
+app.get("/login", (req, res) => {
+  const templateVars = { user:users[res.cookie["user_id"]]};
+  res.render("login", templateVars);
 
-// app.get("/login", (req, res) => {
-//   res.render("login");
-// });
+});
 
 
-//login submit handler
+           //login submit handler
 
 app.post("/login", (req, res) => {
   // username=req.cookies.user;
   //console.log(username);
-  let username = req.body.username;
-  //let password=users[username]
-  // if(users[username]){
-  //   const templateVars = { username: req.cookies["username"], password: password};
-  //   res.render("urls-index", templateVars);  
-  // } else {
-  //   res.redirect('/urls');
-  // }
-
-  res.cookie("username" , username);
-  res.redirect("/urls");
-  
+  let email = req.body.email;
+  let password =req.body.psw;
+  console.log(email);
+  console.log(password);
+  //1. To check whether the email 
+  if(!email){
+    console.log('no email');
+    res.status(403).send("Email and Password fields are required.");
+  }
+  //2. To check whether the email is already taken or not
+  let flag = false;
+  for (let key in users){
+    if(users[key].email === email){
+      if(users[key].password === password) {
+        res.cookie("user_id" , users[key].id);
+        res.redirect("/urls");
+      } 
+    }
+  }
+  res.status(403).send("wrong password")
 });
-// //logout
+//logout
 // app.get("/logout", (req, res) => {
+
 //   res.render("logout");
 // });
 
 // // logout submit handler
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  console.log("hello");
+  res.clearCookie("user_id");
   res.redirect("/urls");
+
+
+});
+      // register
+
+app.get("/register",(req,res) =>{
+  const templateVars = { user:users[res.cookie["user_id"]]};
+  res.render("register", templateVars)
+});
+
+      //register handler
+
+app.post ("/register" ,(req ,res)=>{
+  const email = req.body.email;
+  const password = req.body.psw;
+  //1. To check whether the email or password is empty
+  if(!email || !password){
+    res.send("Email and Password fields are required.");
+  }
+  //2. To check whether the email is already taken or not
+  let flag = false;
+  for(let key in users){
+    if(users[key].email === email){
+      flag = true;
+    }
+  }
+  if(flag){
+    res.send("Email already used. Please try with a different one");
+  } else {
+    //register the user
+    const id = generateRandomString(6);
+    const newUser = {
+      id: id,
+      email: email,
+      password: password
+    };
+    //add user object to user database
+    users[id] = newUser;
+    res.cookie("user_id", id)
+    res.redirect('/urls')
+    
+  }
 });
 
 
-
-
+    //home
 
 app.get("/", (req, res) => {
   res.send("Hello!");
-  const templateVars = { username:req.cookies["username"]};
+  const templateVars = { user:users[req.cookie["user_id"]]};
 });
 
 app.get("/urls.json", (req, res) => {
@@ -91,22 +154,25 @@ app.post("/urls/:shortURL/delete", (req, res) => {
  res.redirect("/urls");
 
 });
+                //urls
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase ,username:req.cookies["username"]};
+  console.log(users);
+  const templateVars = { urls: urlDatabase, user: users[req.cookies["user_id"]]};
+  console.log(req.cookies["user_id"]);
   res.render("urls_index", templateVars);
-
+  
 
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { username:req.cookies["username"]};
+  const templateVars = { user:users[req.cookies["user_id"]]};
   res.render("urls_new",templateVars);
 });
 
 app.get("/u/:shortURL", (req, res) => {
    //const longURL = `http://www.${shortURL}`
-   const templateVars = { username:req.cookies["username"]};
+   const templateVars = { user:users[req.cookies["user_id"]]};
    const longURL = urlDatabase[req.params.shortURL]; 
   res.redirect(longURL);
 });
