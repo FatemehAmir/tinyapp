@@ -1,12 +1,15 @@
 
 const express = require("express");
+const morgan = require("morgan");
 const app = express();
 const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
+app.use(morgan("dev"));
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 const cookieParser = require("cookie-parser");
+const { request } = require("express");
 app.use(cookieParser());
 
 const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -22,9 +25,13 @@ function generateRandomString(length) {
 }
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
+//shortURL=urlDatabase[res.cookie["user_id"]]
+//longURL= shortURL[longURL]
+
+
 const users = { 
   "userRandomID": {
     id: "userRandomID", 
@@ -53,14 +60,11 @@ app.post("/login", (req, res) => {
   //console.log(username);
   let email = req.body.email;
   let password =req.body.psw;
-  console.log(email);
-  console.log(password);
   //1. To check whether the email 
   if(!email){
     console.log('no email');
     res.status(403).send("Email and Password fields are required.");
   }
-  //2. To check whether the email is already taken or not
   let flag = false;
   for (let key in users){
     if(users[key].email === email){
@@ -78,7 +82,8 @@ app.post("/login", (req, res) => {
 //   res.render("logout");
 // });
 
-// // logout submit handler
+      // logout submit handler
+
 app.post("/logout", (req, res) => {
   console.log("hello");
   res.clearCookie("user_id");
@@ -157,18 +162,30 @@ app.post("/urls/:shortURL/delete", (req, res) => {
                 //urls
 
 app.get("/urls", (req, res) => {
-  console.log(users);
+  //console.log(users);
+  if(!req.cookies["user_id"]){
+res.redirect("/login");
+  }else{
   const templateVars = { urls: urlDatabase, user: users[req.cookies["user_id"]]};
-  console.log(req.cookies["user_id"]);
+  //console.log(req.cookies["user_id"]);
   res.render("urls_index", templateVars);
-  
+  }
 
 });
+               //urls/new
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { user:users[req.cookies["user_id"]]};
-  res.render("urls_new",templateVars);
+ 
+  if (!req.cookies["user_id"]){
+ res.redirect("/login")
+  }else{
+    const templateVars = { user:users[req.cookies["user_id"]]};
+    res.render("urls_new",templateVars);
+  }
 });
+
+
+
 
 app.get("/u/:shortURL", (req, res) => {
    //const longURL = `http://www.${shortURL}`
