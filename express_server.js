@@ -1,5 +1,6 @@
 
 const express = require("express");
+const bcrypt = require("bcryptjs");
 const morgan = require("morgan");
 const app = express();
 const PORT = 3000; // default port 8080
@@ -67,17 +68,25 @@ app.post("/login", (req, res) => {
     console.log('no email');
     res.status(403).send("Email and Password fields are required.");
   }
-  let flag = false;
-  for (let key in users){
-    if(users[key].email === email){
-      if(users[key].password === password) {
-        res.cookie("user_id" , users[key].id);
-        res.redirect("/urls");
-      } 
-    }
+  bcrypt.compare(password, users[key].password, (err,result)=>{
+  if(!result){
+    return res.status(401).send("Password incorrect");
   }
-  res.status(403).send("wrong password")
+  res.cookie("user_id" , users[key].id);
+  res.redirect("/urls");
+  })
 });
+  // let flag = false;
+  // for (let key in users){
+  //   if(users[key].email === email){
+  //     if(users[key].password === password) {
+  //       res.cookie("user_id" , users[key].id);
+  //       res.redirect("/urls");
+  //     } 
+  //   }
+  // }
+  // res.status(403).send("wrong password")
+
 //logout
 // app.get("/logout", (req, res) => {
 
@@ -108,6 +117,7 @@ app.get("/register",(req,res) =>{
 app.post ("/register" ,(req ,res)=>{
   const email = req.body.email;
   const password = req.body.psw;
+ 
   //1. To check whether the email or password is empty
   if(!email || !password){
     res.send("Email and Password fields are required.");
@@ -123,16 +133,21 @@ app.post ("/register" ,(req ,res)=>{
     res.send("Email already used. Please try with a different one");
   } else {
     //register the user
-    const id = generateRandomString(6);
-    const newUser = {
-      id: id,
-      email: email,
-      password: password
-    };
-    //add user object to user database
-    users[id] = newUser;
-    res.cookie("user_id", id)
-    res.redirect('/urls')
+    bcrypt.genSalt(10, (err, salt)=>{
+      bcrypt.hash(password, salt,(err,hash)=>{
+        const id = generateRandomString(6);
+        const newUser = {
+          id: id,
+          email: email,
+          password: hash
+        };
+        //add user object to user database
+        users[id] = newUser;
+        res.cookie("user_id", id)
+        res.redirect('/urls') 
+      })
+    })
+    
     
   }
 });
