@@ -2,7 +2,7 @@
 const express = require("express");
 const morgan = require("morgan");
 const app = express();
-const PORT = 8080; // default port 8080
+const PORT = 3000; // default port 8080
 app.set("view engine", "ejs");
 app.use(morgan("dev"));
 
@@ -29,7 +29,9 @@ const urlDatabase = {
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 //shortURL=urlDatabase[res.cookie["user_id"]]
+//shortURL=req.params.shortURL
 //longURL= shortURL[longURL]
+//userID=shortUrl[userID]
 
 
 const users = { 
@@ -47,7 +49,7 @@ const users = {
 
              //login 
 app.get("/login", (req, res) => {
-  const templateVars = { user:users[res.cookie["user_id"]]};
+  const templateVars = {  user:users[res.cookie["user_id"]]};
   res.render("login", templateVars);
 
 });
@@ -94,8 +96,11 @@ app.post("/logout", (req, res) => {
       // register
 
 app.get("/register",(req,res) =>{
+  console.log("hiii")
   const templateVars = { user:users[res.cookie["user_id"]]};
+  console.log("hiii")
   res.render("register", templateVars)
+  
 });
 
       //register handler
@@ -148,7 +153,7 @@ app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
   const longURL = req.body.longURL;
   const shortURL = generateRandomString(6);
-  urlDatabase[shortURL] = `http://www.${longURL}`;
+  urlDatabase[shortURL] = {longURL : longURL , userID:req.cookies["user_id"]};
 
   res.redirect("/urls");         // Respond with 'Ok' (we will replace this)
 });
@@ -165,13 +170,15 @@ app.get("/urls", (req, res) => {
   //console.log(users);
   if(!req.cookies["user_id"]){
 res.redirect("/login");
-  }else{
-  const templateVars = { urls: urlDatabase, user: users[req.cookies["user_id"]]};
+  }else {
+    result= urlsForUser(req.cookies["user_id"])    
+  const templateVars = { urls:result ,  user:users[req.cookies["user_id"]]};
   //console.log(req.cookies["user_id"]);
   res.render("urls_index", templateVars);
-  }
-
-});
+      }
+   }
+  
+);
                //urls/new
 
 app.get("/urls/new", (req, res) => {
@@ -179,34 +186,46 @@ app.get("/urls/new", (req, res) => {
   if (!req.cookies["user_id"]){
  res.redirect("/login")
   }else{
-    const templateVars = { user:users[req.cookies["user_id"]]};
+
+    const templateVars = {  user:users[req.cookies["user_id"]]};
     res.render("urls_new",templateVars);
   }
 });
 
-
-
+         //u/:id
 
 app.get("/u/:shortURL", (req, res) => {
    //const longURL = `http://www.${shortURL}`
+   if (!req.cookies["user_id"]){
+    res.redirect("/login")
+     }else{
    const templateVars = { user:users[req.cookies["user_id"]]};
    const longURL = urlDatabase[req.params.shortURL]; 
   res.redirect(longURL);
+     }
 });
 app.post("/urls/:shortURL", (req, res) => {
  const longURL=req.body.longURL
- console.log(req.body);
- console.log(req.params);
- urlDatabase[req.params.shortURL]= `http://www.${longURL}`     
+ 
+ result= urlsForUser(req.cookies["user_id"])    
+ const templateVars = { urls:result ,  user:users[req.cookies["user_id"]]};
+ //urlDatabase[req.params.shortURL]= `http://www.${longURL}`     
   //urlDatabase[req.body.longURL];
   res.redirect("/urls");
  
  });
 
 app.get("/urls/:shortURL", (req, res) => {
-
-  const templateVars = { shortURL: req.params.shortURL, longURL: req.params.longURL };
-  res.render("urls_show", templateVars);
+  
+    const urlObject = urlsForUser(req.cookies["user_id"])
+    for (let shortURL in urlObject){
+      if(shortURL===req.params.shortURL){ 
+        const abc = {longURL :urlObject[shortURL] , shortURL:shortURL,  user:users[req.cookies["user_id"]], };
+        res.render("urls_show", abc);
+        return;
+      }
+    }
+  res.redirect("/login");
 });
 
 app.get("/hello", (req, res) => {
@@ -225,3 +244,15 @@ app.get("/set", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+ const urlsForUser =function(id){
+let result={};
+    for(let element in urlDatabase){
+      let urlinfo=urlDatabase[element];
+      //if(users[key].email === email)
+      if(id === urlinfo.userID){
+        result[element]=urlinfo.longURL;
+      }
+    }
+    return result;
+  }  
