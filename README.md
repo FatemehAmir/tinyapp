@@ -4,8 +4,8 @@ TinyApp is a full stack web application built with Node and Express that allows 
 
 ## Final Product
 
-!["screenshot description"](https://raw.githubusercontent.com/FatemehAmir/tinyapp/master/docs/login%20.png)
-!["screenshot description"](#)
+!["login"](https://raw.githubusercontent.com/FatemehAmir/tinyapp/master/docs/login%20.png)
+!["urls"](https://github.com/FatemehAmir/tinyapp/blob/master/docs/urls.png)
 
 ## Dependencies
 
